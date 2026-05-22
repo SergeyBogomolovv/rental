@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
+import { ChevronDown, Search, SlidersHorizontal } from 'lucide-react'
 import { api } from '../api/client'
 import { PropertyCard } from '../components/PropertyCard'
 import { PropertyMap } from '../components/PropertyMap'
@@ -21,10 +21,13 @@ const defaultFilters = {
 
 export function CatalogPage() {
   const [filters, setFilters] = useState(defaultFilters)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const params = useMemo(() => {
     return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ''))
   }, [filters])
+
+  const activeFiltersCount = Object.values(filters).filter((value) => value !== '').length
 
   const {
     data: properties = [],
@@ -43,6 +46,10 @@ export function CatalogPage() {
     setFilters((current) => ({ ...current, [name]: value }))
   }
 
+  const resetFilters = () => {
+    setFilters(defaultFilters)
+  }
+
   return (
     <section className='page-grid'>
       <div className='page-heading'>
@@ -50,12 +57,31 @@ export function CatalogPage() {
           <h1>Каталог аренды</h1>
           <p>Подберите подходящий объект по району, цене, типу жилья и условиям аренды.</p>
         </div>
-        <button className='button ghost' type='button' onClick={() => setFilters(defaultFilters)}>
+        <button className='button ghost reset-filters' type='button' onClick={resetFilters}>
           Сбросить
         </button>
       </div>
 
-      <form className='filters'>
+      <div className='filter-summary'>
+        <button
+          className='button ghost filter-toggle'
+          type='button'
+          onClick={() => setFiltersOpen((current) => !current)}
+          aria-expanded={filtersOpen}
+          aria-controls='catalog-filters'
+        >
+          <SlidersHorizontal size={17} />
+          Фильтры{activeFiltersCount ? `: ${activeFiltersCount}` : ''}
+          <ChevronDown className={filtersOpen ? 'rotated' : ''} size={18} />
+        </button>
+        {activeFiltersCount > 0 && (
+          <button className='button ghost compact' type='button' onClick={resetFilters}>
+            Сбросить
+          </button>
+        )}
+      </div>
+
+      <form className={`filters ${filtersOpen ? 'open' : ''}`} id='catalog-filters'>
         <label>
           Город
           <input name='city' value={filters.city} onChange={updateFilter} placeholder='Москва' />
