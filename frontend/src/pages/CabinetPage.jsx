@@ -3,10 +3,13 @@ import { useState } from 'react'
 import { CalendarDays, MessageSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client'
+import { useAuth } from '../contexts/useAuth'
+import { formatDate, formatDateTime } from '../utils/date'
 import { activeRequestStatuses, requestStatusLabels } from '../utils/labels'
 
 export function CabinetPage() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const [error, setError] = useState('')
 
   const { data: requests = [], isLoading } = useQuery({
@@ -32,6 +35,17 @@ export function CabinetPage() {
         <div>
           <h1>Личный кабинет</h1>
           <p>История заявок и возможность отменить активную заявку.</p>
+        </div>
+      </div>
+
+      <div className="profile-summary">
+        <div>
+          <span>Имя</span>
+          <strong>{user?.name || user?.first_name || 'Не указано'}</strong>
+        </div>
+        <div>
+          <span>Email</span>
+          <strong>{user?.email}</strong>
         </div>
       </div>
 
@@ -62,6 +76,10 @@ export function CabinetPage() {
                 <CalendarDays size={16} />
                 {formatDate(request.desired_move_in_date)}
               </span>
+              <span className="request-date">
+                <CalendarDays size={16} />
+                Создана: {formatDateTime(request.created_at)}
+              </span>
               {activeRequestStatuses.includes(request.status) && (
                 <button
                   className="button ghost"
@@ -78,12 +96,4 @@ export function CabinetPage() {
       </div>
     </section>
   )
-}
-
-function formatDate(value) {
-  if (!value) {
-    return 'Дата не указана'
-  }
-
-  return new Intl.DateTimeFormat('ru-RU').format(new Date(value))
 }

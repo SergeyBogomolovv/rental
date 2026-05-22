@@ -13,6 +13,7 @@ import {
 import { Link, NavLink } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client'
 import { useAuth } from '../contexts/useAuth'
+import { formatDate, formatDateTime } from '../utils/date'
 import {
   accountStatusLabels,
   activeRequestStatuses,
@@ -106,32 +107,56 @@ export function AdminOverviewPage() {
 export function AdminPropertiesPage() {
   const queryClient = useQueryClient()
   const [form, setForm] = useState(emptyProperty)
+  const [editingId, setEditingId] = useState(null)
   const [error, setError] = useState('')
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['admin-properties'],
     queryFn: async () => (await api.get('/admin/properties/')).data,
   })
+  const { data: requests = [] } = useQuery({
+    queryKey: ['admin-requests'],
+    queryFn: async () => (await api.get('/admin/requests/')).data,
+  })
 
-  const createMutation = useMutation({
-    mutationFn: () => api.post('/admin/properties/', normalizeProperty(form)),
+  const approvedRequestByProperty = useMemo(() => {
+    return new Map(
+      requests
+        .filter((request) => request.status === 'approved')
+        .map((request) => [request.property, request]),
+    )
+  }, [requests])
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      editingId
+        ? api.patch(`/admin/properties/${editingId}/`, normalizeProperty(form))
+        : api.post('/admin/properties/', normalizeProperty(form)),
     onSuccess: () => {
       setForm(emptyProperty)
+      setEditingId(null)
       setError('')
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] })
+      queryClient.invalidateQueries({ queryKey: ['properties'] })
     },
     onError: (requestError) => setError(getErrorMessage(requestError)),
   })
 
   const patchMutation = useMutation({
     mutationFn: ({ id, payload }) => api.patch(`/admin/properties/${id}/`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-properties'] }),
+    onSuccess: () => {
+      setError('')
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] })
+    },
     onError: (requestError) => setError(getErrorMessage(requestError)),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/admin/properties/${id}/`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-properties'] }),
+    onSuccess: () => {
+      setError('')
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] })
+    },
     onError: (requestError) => setError(getErrorMessage(requestError)),
   })
 
@@ -140,23 +165,47 @@ export function AdminPropertiesPage() {
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
   }
 
+  const startEdit = (property) => {
+    setEditingId(property.id)
+    setForm(propertyToForm(property))
+    setError('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm(emptyProperty)
+    setError('')
+  }
+
   return (
     <AdminShell>
       <form
         className="admin-create-panel"
         onSubmit={(event) => {
           event.preventDefault()
-          createMutation.mutate()
+          saveMutation.mutate()
         }}
       >
         <div className="admin-form-header">
           <div>
-            <h2>Новый объект</h2>
-            <p>Заполните карточку сразу с координатами, чтобы объект появился на карте.</p>
+            <h2>{editingId ? 'Редактирование объекта' : 'Новый объект'}</h2>
+            <p>
+              {editingId
+                ? 'Обновите параметры объекта и сохраните изменения.'
+                : 'Заполните карточку сразу с координатами, чтобы объект появился на карте.'}
+            </p>
           </div>
-          <button className="button primary" type="submit" disabled={createMutation.isPending}>
-            Создать объект
-          </button>
+          <div className="admin-form-actions">
+            {editingId && (
+              <button className="button ghost" type="button" onClick={cancelEdit}>
+                Отменить
+              </button>
+            )}
+            <button className="button primary" type="submit" disabled={saveMutation.isPending}>
+              {editingId ? 'Сохранить объект' : 'Создать объект'}
+            </button>
+          </div>
         </div>
 
         <div className="admin-form-grid">
@@ -211,6 +260,7 @@ export function AdminPropertiesPage() {
                 <select name="status" value={form.status} onChange={update}>
                   <option value="available">Свободно</option>
                   <option value="hidden">Скрыто</option>
+                  {form.status === 'booked' && <option value="booked">Забронировано</option>}
                 </select>
               </label>
               <label>
@@ -278,6 +328,7 @@ export function AdminPropertiesPage() {
         {properties.map((property) => {
           const isBooked = property.status === 'booked'
           const canOpenProperty = property.status !== 'hidden'
+          const approvedRequest = approvedRequestByProperty.get(property.id)
 
           return (
             <article className="admin-property-card" key={property.id}>
@@ -319,8 +370,16 @@ export function AdminPropertiesPage() {
               </div>
               <div className="admin-card-actions">
                 <strong>{formatMoney(property.price_per_month)} ₽/мес.</strong>
+                <button className="button ghost" type="button" onClick={() => startEdit(property)}>
+                  Редактировать
+                </button>
                 {isBooked ? (
-                  <span className="property-lock-note">Объект забронирован</span>
+                  <span className="property-lock-note">
+                    Объект забронирован
+                    {approvedRequest?.user_email && (
+                      <small>Одобрена заявка: {approvedRequest.user_email}</small>
+                    )}
+                  </span>
                 ) : (
                   <>
                     <button
@@ -332,10 +391,20 @@ export function AdminPropertiesPage() {
                           payload: { status: property.status === 'hidden' ? 'available' : 'hidden' },
                         })
                       }
+                      disabled={patchMutation.isPending}
                     >
                       {property.status === 'hidden' ? 'Показать' : 'Скрыть'}
                     </button>
-                    <button className="button danger" type="button" onClick={() => deleteMutation.mutate(property.id)}>
+                    <button
+                      className="button danger"
+                      type="button"
+                      onClick={() => {
+                        if (confirmPropertyDelete(property)) {
+                          deleteMutation.mutate(property.id)
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
+                    >
                       Удалить
                     </button>
                   </>
@@ -399,6 +468,10 @@ export function AdminRequestsPage() {
                 </span>
               </div>
               <div className="admin-request-cell request-info-cell">
+                <span>
+                  <CalendarDays size={16} />
+                  Создана: {formatDateTime(request.created_at)}
+                </span>
                 <span>
                   <CalendarDays size={16} />
                   Заезд: {formatDate(request.desired_move_in_date)}
@@ -495,6 +568,7 @@ export function AdminUsersPage() {
                 <h3>{user.email}</h3>
                 {isCurrentUser && <p className="muted">Текущий администратор</p>}
                 <p className="muted">Заявок: {user.request_count ?? 0}</p>
+                <p className="muted">Зарегистрирован: {formatDateTime(user.date_joined)}</p>
               </div>
               <div className="admin-user-actions">
                 <button
@@ -545,16 +619,31 @@ function normalizeProperty(form) {
   }
 }
 
-function formatMoney(value) {
-  return Number(value).toLocaleString('ru-RU')
+function propertyToForm(property) {
+  return {
+    title: property.title || '',
+    description: property.description || '',
+    property_type: property.property_type || 'apartment',
+    city: property.city || '',
+    district: property.district || '',
+    address: property.address || '',
+    price_per_month: property.price_per_month || '',
+    rooms: property.rooms || 1,
+    area: property.area || '',
+    floor: property.floor || 1,
+    total_floors: property.total_floors || 1,
+    has_furniture: Boolean(property.has_furniture),
+    has_parking: Boolean(property.has_parking),
+    pets_allowed: Boolean(property.pets_allowed),
+    latitude: property.latitude || '',
+    longitude: property.longitude || '',
+    photo_url: property.photo_url || '',
+    status: property.status || 'available',
+  }
 }
 
-function formatDate(value) {
-  if (!value) {
-    return 'Дата не указана'
-  }
-
-  return new Intl.DateTimeFormat('ru-RU').format(new Date(value))
+function formatMoney(value) {
+  return Number(value).toLocaleString('ru-RU')
 }
 
 function getTerminalRequestText(status) {
@@ -565,4 +654,8 @@ function getTerminalRequestText(status) {
   }
 
   return labels[status] || 'Заявка закрыта'
+}
+
+function confirmPropertyDelete(property) {
+  return window.confirm(`Удалить объект "${property.title}"? Это действие нельзя отменить.`)
 }

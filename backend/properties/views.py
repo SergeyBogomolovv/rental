@@ -24,8 +24,13 @@ class PropertyViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=["get"])
     def map(self, request):
         queryset = self.filter_queryset(self.get_queryset()).filter(latitude__isnull=False, longitude__isnull=False)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = PropertyMapSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
         serializer = PropertyMapSerializer(queryset, many=True, context={"request": request})
-        return self.get_paginated_response(serializer.data) if self.paginator else Response(serializer.data)
+        return Response(serializer.data)
 
 
 class AdminPropertyViewSet(viewsets.ModelViewSet):

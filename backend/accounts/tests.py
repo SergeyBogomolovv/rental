@@ -52,3 +52,17 @@ class AdminUserApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Пароли не совпадают", str(response.data))
+
+    def test_blocked_admin_cannot_access_admin_api(self):
+        User = get_user_model()
+        blocked_admin = User.objects.create_user(
+            email="blocked-admin@example.com",
+            password="demo12345",
+            role=User.Role.ADMIN,
+            account_status=User.AccountStatus.BLOCKED,
+        )
+        self.client.force_authenticate(blocked_admin)
+
+        response = self.client.get("/api/admin/users/")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

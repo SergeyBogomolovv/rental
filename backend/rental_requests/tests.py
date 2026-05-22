@@ -58,6 +58,25 @@ class RentalRequestApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("активная заявка", str(response.data))
 
+    def test_user_cannot_patch_request_directly(self):
+        rental_request = RentalRequest.objects.create(
+            user=self.user,
+            property=self.property,
+            message="Хочу посмотреть объект.",
+            desired_move_in_date=date.today() + timedelta(days=7),
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.patch(
+            f"/api/requests/{rental_request.id}/",
+            {"message": "Новое сообщение."},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        rental_request.refresh_from_db()
+        self.assertEqual(rental_request.message, "Хочу посмотреть объект.")
+
     def test_admin_cannot_change_terminal_request(self):
         rental_request = RentalRequest.objects.create(
             user=self.user,
@@ -107,3 +126,34 @@ class RentalRequestApiTests(APITestCase):
         self.property.refresh_from_db()
         self.assertEqual(rental_request.status, RentalRequest.Status.NEW)
         self.assertEqual(self.property.status, Property.Status.HIDDEN)
+
+    def test_admin_cannot_mutate_requests_without_status_action(self):
+        rental_request = RentalRequest.objects.create(
+            user=self.user,
+            property=self.property,
+            message="Хочу посмотреть объект.",
+            desired_move_in_date=date.today() + timedelta(days=7),
+        )
+        self.client.force_authenticate(self.admin)
+
+        patch_response = self.client.patch(
+            f"/api/admin/requests/{rental_request.id}/",
+            {"status": RentalRequest.Status.APPROVED},
+            format="json",
+        )
+        delete_response = self.client.delete(f"/api/admin/requests/{rental_request.id}/")
+        create_response = self.client.post(
+            "/api/admin/requests/",
+            {
+                "user": self.user.id,
+                "property": self.property.id,
+                "message": "Создать через админский endpoint.",
+                "desired_move_in_date": date.today() + timedelta(days=14),
+            },
+            format="json",
+        )
+
+        self.assertEqual(patch_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(delete_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(create_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(RentalRequest.objects.filter(id=rental_request.id).exists())

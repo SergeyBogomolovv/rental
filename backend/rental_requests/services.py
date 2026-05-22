@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from properties.models import Property
 from .models import RentalRequest
@@ -21,7 +22,10 @@ def set_request_status(rental_request, status):
         RentalRequest.objects.filter(
             property=rental_request.property,
             status__in=RentalRequest.ACTIVE_STATUSES,
-        ).exclude(pk=rental_request.pk).update(status=RentalRequest.Status.REJECTED)
+        ).exclude(pk=rental_request.pk).update(
+            status=RentalRequest.Status.REJECTED,
+            updated_at=timezone.now(),
+        )
     else:
         rental_request.save(update_fields=["status", "updated_at"])
 

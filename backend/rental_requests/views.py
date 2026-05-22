@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -11,11 +11,15 @@ from .serializers import AdminRentalRequestSerializer, RentalRequestSerializer
 from .services import set_request_status
 
 
-class RentalRequestViewSet(viewsets.ModelViewSet):
+class RentalRequestViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = RentalRequest.objects.none()
     serializer_class = RentalRequestSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "post", "patch", "head", "options"]
     ordering_fields = ("created_at", "updated_at")
 
     def get_queryset(self):
@@ -33,7 +37,7 @@ class RentalRequestViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(rental_request).data)
 
 
-class AdminRentalRequestViewSet(viewsets.ModelViewSet):
+class AdminRentalRequestViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RentalRequest.objects.select_related("user", "property").all()
     serializer_class = AdminRentalRequestSerializer
     permission_classes = [IsAdminRole]
@@ -41,12 +45,6 @@ class AdminRentalRequestViewSet(viewsets.ModelViewSet):
     search_fields = ("user__email", "property__title", "property__address")
     ordering_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
-
-    def perform_update(self, serializer):
-        old_status = serializer.instance.status
-        rental_request = serializer.save()
-        if old_status != rental_request.status:
-            set_request_status(rental_request, rental_request.status)
 
     @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):

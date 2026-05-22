@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
 
 User = get_user_model()
 
@@ -27,18 +27,17 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
             raise serializers.ValidationError({"password_confirm": "Пароли не совпадают."})
+        validate_password(attrs["password"])
         return attrs
 
     def create(self, validated_data):
         name = validated_data.pop("name", "")
         validated_data.pop("password_confirm")
-        user = User.objects.create_user(
+        return User.objects.create_user(
             email=validated_data["email"],
             password=validated_data["password"],
             first_name=name,
         )
-        Token.objects.get_or_create(user=user)
-        return user
 
 
 class LoginSerializer(serializers.Serializer):
