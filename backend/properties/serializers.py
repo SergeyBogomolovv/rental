@@ -1,3 +1,4 @@
+from drf_spectacular.utils import OpenApiTypes, extend_schema_field
 from rest_framework import serializers
 
 from .models import Property
@@ -34,6 +35,7 @@ class PropertySerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("created_at", "updated_at", "image")
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_image(self, obj):
         return obj.photo_url or ""
 
@@ -57,5 +59,6 @@ class PropertyMapSerializer(serializers.ModelSerializer):
         model = Property
         fields = ("id", "title", "price_per_month", "property_type", "latitude", "longitude", "status", "image")
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_image(self, obj):
         return PropertySerializer(context=self.context).get_image(obj)

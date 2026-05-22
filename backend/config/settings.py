@@ -151,4 +151,26 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Rental Map API",
     "DESCRIPTION": "Real estate rental API.",
     "VERSION": "1.0.0",
+    "ENUM_NAME_OVERRIDES": {
+        "AccountStatusEnum": [("active", "Активен"), ("blocked", "Заблокирован")],
+        "PropertyStatusEnum": [
+            ("available", "Свободно"),
+            ("booked", "Забронировано"),
+            ("hidden", "Скрыто"),
+        ],
+        "PropertyTypeEnum": [
+            ("apartment", "Квартира"),
+            ("house", "Дом"),
+            ("room", "Комната"),
+            ("studio", "Студия"),
+        ],
+        "RentalRequestStatusEnum": [
+            ("new", "Новая"),
+            ("in_review", "На рассмотрении"),
+            ("approved", "Одобрена"),
+            ("rejected", "Отклонена"),
+            ("cancelled", "Отменена"),
+        ],
+        "UserRoleEnum": [("user", "Пользователь"), ("admin", "Администратор")],
+    },
 }

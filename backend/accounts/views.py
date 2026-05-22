@@ -1,18 +1,30 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 
 from .permissions import IsAdminRole
-from .serializers import AdminUserSerializer, LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import AdminUserSerializer, AuthResponseSerializer, LoginSerializer, RegisterSerializer, UserSerializer
 
 User = get_user_model()
 
 
+@extend_schema(
+    responses=inline_serializer(
+        name="ApiRootResponse",
+        fields={
+            "status": serializers.CharField(),
+            "name": serializers.CharField(),
+            "endpoints": serializers.DictField(child=serializers.CharField()),
+        },
+    )
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def api_root(request):
@@ -34,6 +46,7 @@ def api_root(request):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(request=RegisterSerializer, responses={201: AuthResponseSerializer})
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -48,6 +61,7 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(request=LoginSerializer, responses=AuthResponseSerializer)
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -59,9 +73,11 @@ class LoginView(APIView):
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses=UserSerializer)
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
+    @extend_schema(request=UserSerializer, responses=UserSerializer)
     def patch(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

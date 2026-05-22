@@ -12,12 +12,15 @@ from .services import set_request_status
 
 
 class RentalRequestViewSet(viewsets.ModelViewSet):
+    queryset = RentalRequest.objects.none()
     serializer_class = RentalRequestSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "patch", "head", "options"]
     ordering_fields = ("created_at", "updated_at")
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return RentalRequest.objects.none()
         return RentalRequest.objects.filter(user=self.request.user).select_related("user", "property")
 
     @action(detail=True, methods=["post"])
