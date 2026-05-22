@@ -364,6 +364,11 @@ textarea {
   border-radius: 8px;
 }
 
+.detail-map .map {
+  height: 320px;
+  min-height: 320px;
+}
+
 .property-marker {
   background: transparent;
   border: 0;

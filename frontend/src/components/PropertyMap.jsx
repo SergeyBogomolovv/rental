@@ -31,7 +31,9 @@ export function PropertyMap({ properties }) {
             <br />
             {Number(property.price_per_month).toLocaleString('ru-RU')} ₽/мес.
             <br />
-            <Link to={`/properties/${property.id}`}>Открыть</Link>
+            {property.address}
+            <br />
+            <Link to={`/properties/${property.id}`}>Подробнее</Link>
           </Popup>
         </Marker>
       ))}

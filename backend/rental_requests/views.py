@@ -57,6 +57,17 @@ class AdminRentalRequestViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(rental_request).data)
 
     @action(detail=True, methods=["post"])
+    def review(self, request, pk=None):
+        rental_request = self.get_object()
+        if rental_request.status != RentalRequest.Status.NEW:
+            raise ValidationError("На рассмотрение можно отправить только новую заявку.")
+        try:
+            rental_request = set_request_status(rental_request, RentalRequest.Status.IN_REVIEW)
+        except DjangoValidationError as error:
+            raise ValidationError(error.message) from error
+        return Response(self.get_serializer(rental_request).data)
+
+    @action(detail=True, methods=["post"])
     def reject(self, request, pk=None):
         rental_request = self.get_object()
         if rental_request.status not in RentalRequest.ACTIVE_STATUSES:

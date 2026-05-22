@@ -42,6 +42,13 @@ class PropertySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Забронированный объект нельзя скрыть.")
         return value
 
+    def validate(self, attrs):
+        floor = attrs.get("floor", getattr(self.instance, "floor", None))
+        total_floors = attrs.get("total_floors", getattr(self.instance, "total_floors", None))
+        if floor and total_floors and floor > total_floors:
+            raise serializers.ValidationError({"floor": "Этаж не может быть больше общего количества этажей."})
+        return attrs
+
 
 class PropertyMapSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()

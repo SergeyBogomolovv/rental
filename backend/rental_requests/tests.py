@@ -73,3 +73,37 @@ class RentalRequestApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         rental_request.refresh_from_db()
         self.assertEqual(rental_request.status, RentalRequest.Status.APPROVED)
+
+    def test_admin_can_move_new_request_to_review(self):
+        rental_request = RentalRequest.objects.create(
+            user=self.user,
+            property=self.property,
+            message="Хочу посмотреть объект.",
+            desired_move_in_date=date.today() + timedelta(days=7),
+        )
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.post(f"/api/admin/requests/{rental_request.id}/review/", format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rental_request.refresh_from_db()
+        self.assertEqual(rental_request.status, RentalRequest.Status.IN_REVIEW)
+
+    def test_admin_cannot_approve_request_when_property_is_not_available(self):
+        rental_request = RentalRequest.objects.create(
+            user=self.user,
+            property=self.property,
+            message="Хочу посмотреть объект.",
+            desired_move_in_date=date.today() + timedelta(days=7),
+        )
+        self.property.status = Property.Status.HIDDEN
+        self.property.save(update_fields=["status"])
+        self.client.force_authenticate(self.admin)
+
+        response = self.client.post(f"/api/admin/requests/{rental_request.id}/approve/", format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        rental_request.refresh_from_db()
+        self.property.refresh_from_db()
+        self.assertEqual(rental_request.status, RentalRequest.Status.NEW)
+        self.assertEqual(self.property.status, Property.Status.HIDDEN)

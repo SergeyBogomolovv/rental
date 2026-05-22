@@ -66,6 +66,7 @@ class AuthResponseSerializer(serializers.Serializer):
 
 class AdminUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="first_name", required=False, allow_blank=True)
+    request_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -79,6 +80,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "account_status",
             "is_staff",
             "is_superuser",
+            "request_count",
             "date_joined",
         )
         read_only_fields = ("id", "email", "is_superuser", "date_joined")

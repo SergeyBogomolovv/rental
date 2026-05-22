@@ -11,14 +11,18 @@ def set_request_status(rental_request, status):
         raise ValidationError("Эту заявку уже нельзя изменить.")
 
     rental_request.status = status
-    rental_request.save(update_fields=["status", "updated_at"])
 
     if status == RentalRequest.Status.APPROVED:
+        if rental_request.property.status != Property.Status.AVAILABLE:
+            raise ValidationError("Одобрить можно только заявку на свободный объект.")
+        rental_request.save(update_fields=["status", "updated_at"])
         rental_request.property.status = Property.Status.BOOKED
         rental_request.property.save(update_fields=["status", "updated_at"])
         RentalRequest.objects.filter(
             property=rental_request.property,
             status__in=RentalRequest.ACTIVE_STATUSES,
         ).exclude(pk=rental_request.pk).update(status=RentalRequest.Status.REJECTED)
+    else:
+        rental_request.save(update_fields=["status", "updated_at"])
 
     return rental_request

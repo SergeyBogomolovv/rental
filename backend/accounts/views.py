@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -69,7 +70,7 @@ class MeView(APIView):
 
 
 class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all().order_by("-date_joined")
+    queryset = User.objects.annotate(request_count=Count("rental_requests")).order_by("-date_joined")
     serializer_class = AdminUserSerializer
     permission_classes = [IsAdminRole]
     search_fields = ("email", "first_name", "last_name")

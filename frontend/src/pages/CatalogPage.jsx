@@ -7,13 +7,16 @@ import { PropertyMap } from '../components/PropertyMap'
 
 const defaultFilters = {
   city: '',
+  district: '',
   property_type: '',
   min_price: '',
   max_price: '',
+  min_area: '',
   rooms: '',
   has_furniture: '',
   has_parking: '',
   pets_allowed: '',
+  status: '',
 }
 
 export function CatalogPage() {
@@ -58,6 +61,10 @@ export function CatalogPage() {
           <input name='city' value={filters.city} onChange={updateFilter} placeholder='Москва' />
         </label>
         <label>
+          Район
+          <input name='district' value={filters.district} onChange={updateFilter} placeholder='Сокольники' />
+        </label>
+        <label>
           Тип
           <select name='property_type' value={filters.property_type} onChange={updateFilter}>
             <option value=''>Любой</option>
@@ -80,11 +87,39 @@ export function CatalogPage() {
           <input name='rooms' type='number' value={filters.rooms} onChange={updateFilter} />
         </label>
         <label>
+          Мин. площадь
+          <input name='min_area' type='number' value={filters.min_area} onChange={updateFilter} />
+        </label>
+        <label>
           Мебель
           <select name='has_furniture' value={filters.has_furniture} onChange={updateFilter}>
             <option value=''>Не важно</option>
             <option value='true'>Да</option>
             <option value='false'>Нет</option>
+          </select>
+        </label>
+        <label>
+          Парковка
+          <select name='has_parking' value={filters.has_parking} onChange={updateFilter}>
+            <option value=''>Не важно</option>
+            <option value='true'>Да</option>
+            <option value='false'>Нет</option>
+          </select>
+        </label>
+        <label>
+          Животные
+          <select name='pets_allowed' value={filters.pets_allowed} onChange={updateFilter}>
+            <option value=''>Не важно</option>
+            <option value='true'>Можно</option>
+            <option value='false'>Нельзя</option>
+          </select>
+        </label>
+        <label>
+          Статус
+          <select name='status' value={filters.status} onChange={updateFilter}>
+            <option value=''>Любой</option>
+            <option value='available'>Свободно</option>
+            <option value='booked'>Забронировано</option>
           </select>
         </label>
       </form>
@@ -96,7 +131,7 @@ export function CatalogPage() {
           {!isLoading && !properties.length && (
             <div className='state'>
               <Search size={22} />
-              По выбранным фильтрам ничего не найдено
+              По вашему запросу ничего не найдено
             </div>
           )}
           {properties.map((property) => (

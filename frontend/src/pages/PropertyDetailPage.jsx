@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, MapPin } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client'
+import { PropertyMap } from '../components/PropertyMap'
 import { useAuth } from '../contexts/useAuth'
 import { activeRequestStatuses, propertyStatusLabels, propertyTypeLabels } from '../utils/labels'
 
@@ -94,6 +95,12 @@ export function PropertyDetailPage() {
           <span>{property.has_parking ? 'Есть парковка' : 'Без парковки'}</span>
           <span>{property.pets_allowed ? 'Можно с питомцами' : 'Без питомцев'}</span>
         </div>
+
+        {property.latitude && property.longitude && (
+          <div className="detail-map">
+            <PropertyMap properties={[property]} />
+          </div>
+        )}
 
         <div className="request-panel">
           <h2>Заявка на аренду</h2>

@@ -411,6 +411,16 @@ export function AdminRequestsPage() {
               <div className="admin-request-cell admin-request-actions">
                 {canChangeStatus ? (
                   <>
+                    {request.status === 'new' && (
+                      <button
+                        className="button ghost"
+                        type="button"
+                        onClick={() => actionMutation.mutate({ id: request.id, action: 'review' })}
+                        disabled={actionMutation.isPending}
+                      >
+                        В работу
+                      </button>
+                    )}
                     <button
                       className="button ghost"
                       type="button"
@@ -484,6 +494,7 @@ export function AdminUsersPage() {
                 </div>
                 <h3>{user.email}</h3>
                 {isCurrentUser && <p className="muted">Текущий администратор</p>}
+                <p className="muted">Заявок: {user.request_count ?? 0}</p>
               </div>
               <div className="admin-user-actions">
                 <button
