@@ -30,11 +30,9 @@ brew install python
 ## 2. Скачать проект
 
 ```bash
-git clone <URL_РЕПОЗИТОРИЯ>
+git clone https://github.com/SergeyBogomolovv/eda.git
 cd rental-map
 ```
-
-Замените `<URL_РЕПОЗИТОРИЯ>` на ссылку из GitHub.
 
 ## 3. Запустить backend
 
