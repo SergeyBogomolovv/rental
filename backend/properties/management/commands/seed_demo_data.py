@@ -28,7 +28,7 @@ PROPERTIES = [
         "pets_allowed": False,
         "latitude": "55.760186",
         "longitude": "37.560932",
-        "photo_url": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1702014862053-946a122b920d?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.AVAILABLE,
     },
     {
@@ -48,7 +48,7 @@ PROPERTIES = [
         "pets_allowed": True,
         "latitude": "55.789833",
         "longitude": "37.679731",
-        "photo_url": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.AVAILABLE,
     },
     {
@@ -68,7 +68,7 @@ PROPERTIES = [
         "pets_allowed": False,
         "latitude": "55.690688",
         "longitude": "37.576855",
-        "photo_url": "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1585128792103-0b591f96512e?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.AVAILABLE,
     },
     {
@@ -88,7 +88,7 @@ PROPERTIES = [
         "pets_allowed": True,
         "latitude": "55.906331",
         "longitude": "37.392137",
-        "photo_url": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.AVAILABLE,
     },
     {
@@ -108,7 +108,7 @@ PROPERTIES = [
         "pets_allowed": False,
         "latitude": "55.728378",
         "longitude": "37.582314",
-        "photo_url": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.BOOKED,
     },
     {
@@ -128,7 +128,7 @@ PROPERTIES = [
         "pets_allowed": True,
         "latitude": "55.796289",
         "longitude": "37.938933",
-        "photo_url": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.AVAILABLE,
     },
     {
@@ -148,7 +148,7 @@ PROPERTIES = [
         "pets_allowed": False,
         "latitude": "55.757593",
         "longitude": "37.612661",
-        "photo_url": "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?auto=format&fit=crop&w=1200&q=80",
+        "photo_url": "https://images.unsplash.com/photo-1466098672325-c9ddda4b7975?auto=format&fit=crop&w=1200&q=80",
         "status": Property.Status.HIDDEN,
     },
 ]
